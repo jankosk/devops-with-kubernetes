@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-project
+  template:
+    metadata:
+      labels:
+        app: todo-project
+    spec:
+      containers:
+        - name: todo-project
+          image: jankoskin/todo-project:v1
