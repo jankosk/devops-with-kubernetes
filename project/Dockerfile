@@ -7,7 +7,8 @@ COPY go.mod ./
 RUN go mod download && go mod verify
 
 COPY *.go .
+COPY public /app/public
 
-RUN go build -v -o /todo
+RUN go build -v -o /app/todo
 
-CMD ["/todo"]
+CMD ["/app/todo"]
