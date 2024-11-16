@@ -1,4 +1,4 @@
-module log-output
+module log-output/ticker
 
 go 1.23.1
 

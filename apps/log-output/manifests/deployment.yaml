@@ -12,6 +12,23 @@ spec:
       labels:
         app: log-output
     spec:
+      volumes:
+        - name: log-output-vol
+          emptyDir: {}
       containers:
-        - name: log-output
-          image: jankoskin/log-output:1.07
+        - name: log-output-ticker
+          image: jankoskin/log-output-ticker@sha256:1bf4d3f14667f63c440a4beab2a2297cf1e67ef036e018941ba2b9cc625fd1d0
+          env:
+            - name: LOGS_PATH
+              value: /logs
+          volumeMounts:
+            - name: log-output-vol
+              mountPath: /logs
+        - name: log-output-handler
+          image: jankoskin/log-output-handler@sha256:f4cbe4f5d78cb94cc0d54d52987d84e854d8c80a355ae623cebcf9b31b297d75
+          env:
+            - name: LOGS_PATH
+              value: /logs
+          volumeMounts:
+            - name: log-output-vol
+              mountPath: /logs
