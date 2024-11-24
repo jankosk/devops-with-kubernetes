@@ -12,6 +12,16 @@ spec:
       labels:
         app: ping-pong
     spec:
+      volumes:
+        - name: apps-pv
+          persistentVolumeClaim:
+            claimName: apps-pv-claim
       containers:
         - name: ping-pong
-          image: jankoskin/ping-pong:1.09
+          image: jankoskin/ping-pong@sha256:d5a9777422d6a9ca6174135c94f75d4b8b3837608c6f11580203d5b3be9d62be
+          env:
+            - name: LOGS_PATH
+              value: /logs
+          volumeMounts:
+            - name: apps-pv
+              mountPath: /logs

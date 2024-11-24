@@ -1,20 +1,12 @@
 package main
 
 import (
+	"dwk/common"
 	"fmt"
 	"net/http"
-	"os"
 )
 
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return defaultValue
-	}
-	return value
-}
-
-var PORT = getEnv("PORT", "8080")
+var PORT = common.GetEnv("PORT", "8080")
 
 func main() {
 	port := ":" + PORT

@@ -1,16 +1,15 @@
 FROM golang:1.23-alpine AS build
 
-WORKDIR /app
+WORKDIR /app/log-output/http-handler
 
-COPY go.mod ./
+COPY apps/log-output/http-handler/ ./
+COPY common/ /common/
 
-RUN go mod download && go mod verify
-
-COPY *.go .
+RUN go mod download
 
 RUN CGO_ENABLED=0 go build -v -o /bin/log-handler
 
-FROM gcr.io/distroless/static-debian12
+FROM alpine
 
 COPY --from=build /bin/log-handler /
 CMD ["/log-handler"]

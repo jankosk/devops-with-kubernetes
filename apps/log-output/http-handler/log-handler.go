@@ -2,17 +2,18 @@ package main
 
 import (
 	"bufio"
+	"dwk/common"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
-var logFilePath = os.Getenv("LOGS_PATH")
+var logsPath = common.GetEnv("LOGS_PATH", "/tmp")
 
 func main() {
-	port := ":8080"
+	port := ":3000"
 
 	http.HandleFunc("/", handleLogRequest)
 
@@ -24,14 +25,23 @@ func main() {
 }
 
 func handleLogRequest(w http.ResponseWriter, r *http.Request) {
-	logLine, err := readLastLine(filepath.Join(logFilePath, "logs.txt"))
+	logLine, err := readLastLine(filepath.Join(logsPath, "logs.txt"))
 	if err != nil {
 		http.Error(w, "Unable to read log file", http.StatusInternalServerError)
-		log.Printf("Error reading log file: %v\n", err)
+		return
+	}
+	pingPongs, err := readLastLine(filepath.Join(logsPath, "ping-pongs.txt"))
+	if err != nil {
+		http.Error(w, "Unable to read file", http.StatusInternalServerError)
+		return
+	}
+	pingPongCount, err := strconv.Atoi(pingPongs)
+	if err != nil {
+		http.Error(w, "Unable to parse ping pongs count", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintln(w, logLine)
+	fmt.Fprintf(w, "%s\nPing / Pongs: %d\n", logLine, pingPongCount)
 }
 
 func readLastLine(filePath string) (string, error) {

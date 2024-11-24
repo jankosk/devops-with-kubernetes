@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dwk/common"
 	"fmt"
 	"log"
 	"os"
@@ -10,21 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func blockForever() {
 	select {}
 }
 
 func main() {
 	id := uuid.NewString()
-	logFilePath := os.Getenv("LOGS_PATH")
+	logFilePath := common.GetEnv("LOGS_PATH", "/tmp")
 	f, err := os.Create(filepath.Join(logFilePath, "logs.txt"))
-	check(err)
+	common.CheckErr(err)
 
 	go startLoggingTicker(f, id, time.Second*5)
 

@@ -1,16 +1,16 @@
 FROM golang:1.23-alpine AS build
 
-WORKDIR /app
+WORKDIR /app/log-output/ticker
 
-COPY go.mod go.sum ./
+COPY apps/log-output/ticker/ ./
+COPY common/ /common/
 
-RUN go mod download && go mod verify
+RUN go mod download
 
-COPY *.go .
 
 RUN CGO_ENABLED=0 go build -v -o /bin/ticker
 
-FROM gcr.io/distroless/static-debian12
+FROM alpine
 
 COPY --from=build /bin/ticker /
 CMD ["/ticker"]
