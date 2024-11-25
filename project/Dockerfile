@@ -1,14 +1,16 @@
-FROM golang:alpine3.20
+FROM golang:1.23-alpine AS build
 
-WORKDIR /app
+WORKDIR /project
 
-COPY go.mod ./
+COPY /project/ ./
+COPY common/ /common/
 
-RUN go mod download && go mod verify
+RUN go mod download
 
-COPY *.go .
-COPY public /app/public
+RUN CGO_ENABLED=0 go build -v -o /bin/todo
 
-RUN go build -v -o /app/todo
+FROM alpine
 
-CMD ["/app/todo"]
+COPY --from=build /bin/todo /
+COPY --from=build /project/public/ /public/
+CMD ["/todo"]

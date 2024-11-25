@@ -12,10 +12,18 @@ spec:
       labels:
         app: todo-project
     spec:
+      volumes:
+        - name: static-files-pv
+          persistentVolumeClaim:
+            claimName: todo-project-pvc
       containers:
         - name: todo-project
-          image: jankoskin/todo-project:v2
+          image: jankoskin/todo-project@sha256:20cab4f9fd71fda2c92adf80c69f3ddcb90f15df17febdc3af6cf158fcc7de23
           env:
             - name: PORT
               value: "8080"
-          imagePullPolicy: Always
+            - name: FILES_PATH
+              value: /static
+          volumeMounts:
+            - name: static-files-pv
+              mountPath: /static
