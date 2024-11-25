@@ -9,7 +9,20 @@
 </head>
 
 <body>
-  <h1>Todo</h1>
+  <h1>{{.PageTitle}}</h1>
+  <form>
+    <input id="todo" name="todo" type="text" />
+    <button>Add todo</button>
+  </form>
+  <ul>
+    {{range .Todos}}
+    {{if .Done}}
+    <li class="done">{{.Title}}</li>
+    {{else}}
+    <li>{{.Title}}</li>
+    {{end}}
+    {{end}}
+  </ul>
 </body>
 
 </html>

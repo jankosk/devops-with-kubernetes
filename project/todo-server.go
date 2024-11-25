@@ -3,6 +3,7 @@ package main
 import (
 	"dwk/common"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -13,10 +14,20 @@ import (
 var PORT = common.GetEnv("PORT", "8080")
 var filesPath = common.GetEnv("FILES_PATH", "/tmp")
 
+type Todo struct {
+	Title string
+	Done  bool
+}
+
+type TodoPageData struct {
+	PageTitle string
+	Todos     []Todo
+}
+
 func main() {
 	port := ":" + PORT
 
-	http.Handle("GET /", http.FileServer(http.Dir("public")))
+	http.HandleFunc("GET /", indexPageHandler)
 
 	http.HandleFunc("GET /random-image", randomImageHandler)
 
@@ -25,6 +36,23 @@ func main() {
 	if err != nil {
 		fmt.Printf("Server failed to start: %v\n", err)
 	}
+}
+
+func indexPageHandler(w http.ResponseWriter, r *http.Request) {
+	templ, err := template.ParseFiles("public/index.html")
+	if err != nil {
+		http.Error(w, "Failed parsing index.html", http.StatusInternalServerError)
+		return
+	}
+	data := TodoPageData{
+		PageTitle: "My TODO list",
+		Todos: []Todo{
+			{Title: "Task 1", Done: false},
+			{Title: "Task 2", Done: true},
+			{Title: "Task 3", Done: true},
+		},
+	}
+	templ.Execute(w, data)
 }
 
 func randomImageHandler(w http.ResponseWriter, r *http.Request) {
