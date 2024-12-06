@@ -26,10 +26,12 @@ spec:
             - name: log-output-vol
               mountPath: /logs
         - name: log-output-handler
-          image: jankoskin/log-output-handler@sha256:dc617c926c4413be16f1b11356a8667ef4cd07bf74b7564d1d2d98670097347a
+          image: jankoskin/log-output-handler@sha256:3bc13a6c9df63f0f2eb659625d986bcc84eba99f431656ca714325f6d77d196a
           env:
             - name: LOGS_PATH
               value: /logs
+            - name: PING_PONG_URL
+              value: "http://ping-pong-svc:3001/ping-pong"
           volumeMounts:
             - name: log-output-vol
               mountPath: /logs

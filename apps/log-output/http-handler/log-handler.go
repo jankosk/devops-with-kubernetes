@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"dwk/common"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var logsPath = common.GetEnv("LOGS_PATH", "/tmp")
+var pingPongUrl = common.GetEnv("PING_PONG_URL", "http://localhost:3001")
 
 func main() {
 	port := ":3000"
@@ -30,18 +33,34 @@ func handleLogRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to read log file", http.StatusInternalServerError)
 		return
 	}
-	pingPongs, err := readLastLine(filepath.Join(logsPath, "ping-pongs.txt"))
+
+	pingPongCount, err := fetchPingPongs()
 	if err != nil {
-		http.Error(w, "Unable to read file", http.StatusInternalServerError)
-		return
-	}
-	pingPongCount, err := strconv.Atoi(pingPongs)
-	if err != nil {
-		http.Error(w, "Unable to parse ping pongs count", http.StatusInternalServerError)
+		http.Error(w, "Unable to fetch ping pongs", http.StatusInternalServerError)
 		return
 	}
 
 	fmt.Fprintf(w, "%s\nPing / Pongs: %d\n", logLine, pingPongCount)
+}
+
+func fetchPingPongs() (int, error) {
+	res, err := http.Get(pingPongUrl)
+	if err != nil {
+		return 0, fmt.Errorf("error making GET request: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return 0, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	count, err := strconv.Atoi(strings.TrimSpace(string(body)))
+	if err != nil {
+		return 0, fmt.Errorf("error parsing response to integer: %w", err)
+	}
+
+	return count, nil
 }
 
 func readLastLine(filePath string) (string, error) {
