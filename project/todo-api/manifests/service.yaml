@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: todo-api # This is the app as declared in the deployment.
+  ports:
+    - name: http
+      protocol: TCP
+      port: 4001 # This is a port that is available to the cluster, in this case it can be ~ anything
+      targetPort: 8083 # This is the target port

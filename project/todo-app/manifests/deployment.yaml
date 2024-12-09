@@ -1,27 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-project
+  name: todo-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: todo-project
+      app: todo-app
   template:
     metadata:
       labels:
-        app: todo-project
+        app: todo-app
     spec:
       volumes:
         - name: static-files-pv
           persistentVolumeClaim:
             claimName: todo-project-pvc
       containers:
-        - name: todo-project
-          image: jankoskin/todo-project@sha256:20cab4f9fd71fda2c92adf80c69f3ddcb90f15df17febdc3af6cf158fcc7de23
+        - name: todo-app
+          image: jankoskin/todo-app@sha256:a41aa62a251a0840b30a21bd2e02dec28d4242c0c31a4aa8b014d6f7e7b10212
           env:
             - name: PORT
               value: "8080"
+            - name: TODO_API_URL
+              value: "http://todo-api-svc:4001/todos"
             - name: FILES_PATH
               value: /static
           volumeMounts:

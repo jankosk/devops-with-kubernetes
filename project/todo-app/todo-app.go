@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"dwk/common"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +16,7 @@ import (
 
 var PORT = common.GetEnv("PORT", "8080")
 var filesPath = common.GetEnv("FILES_PATH", "/tmp")
+var todoApiUrl = common.GetEnv("TODO_API_URL", "http://localhost:8083")
 
 type Todo struct {
 	Title string
@@ -28,7 +32,7 @@ func main() {
 	port := ":" + PORT
 
 	http.HandleFunc("GET /", indexPageHandler)
-
+	http.HandleFunc("POST /", formPostHandler)
 	http.HandleFunc("GET /random-image", randomImageHandler)
 
 	fmt.Printf("Server listening on port %s\n", port)
@@ -41,18 +45,39 @@ func main() {
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 	templ, err := template.ParseFiles("public/index.html")
 	if err != nil {
+		log.Fatal(err)
 		http.Error(w, "Failed parsing index.html", http.StatusInternalServerError)
 		return
 	}
+	todos, err := fetchTodos()
+	if err != nil {
+		log.Fatal(err)
+		http.Error(w, "Failed fetching todos", http.StatusInternalServerError)
+		return
+	}
+
 	data := TodoPageData{
 		PageTitle: "My TODO list",
-		Todos: []Todo{
-			{Title: "Task 1", Done: false},
-			{Title: "Task 2", Done: true},
-			{Title: "Task 3", Done: true},
-		},
+		Todos:     todos,
 	}
 	templ.Execute(w, data)
+}
+
+func formPostHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	todo := Todo{Title: title, Done: false}
+	if err := createTodo(todo); err != nil {
+		http.Error(w, "Failed to storing todo", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func randomImageHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,4 +116,42 @@ func storeRandomImage(path string) (int64, error) {
 	defer file.Close()
 
 	return io.Copy(file, resp.Body)
+}
+
+func createTodo(todo Todo) error {
+	todoJson, err := json.Marshal(todo)
+	if err != nil {
+		return fmt.Errorf("failed to serialize todo %w", err)
+	}
+
+	res, err := http.Post(todoApiUrl, "application/json", bytes.NewReader(todoJson))
+	if err != nil {
+		return fmt.Errorf("failed to send POST request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	return nil
+}
+
+func fetchTodos() ([]Todo, error) {
+	res, err := http.Get(todoApiUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch todos: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var todos []Todo
+	if err := json.NewDecoder(res.Body).Decode(&todos); err != nil {
+		return nil, fmt.Errorf("failed to decode todos JSON: %w", err)
+	}
+
+	return todos, nil
 }

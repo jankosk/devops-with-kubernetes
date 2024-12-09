@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-api
+  template:
+    metadata:
+      labels:
+        app: todo-api
+    spec:
+      containers:
+        - name: todo-api
+          image: jankoskin/todo-api@sha256:3b67aa01540ed713c73ba9f23a304686c8ae3fb6ced706ae28bd688fd9f6e4c2
+          env:
+            - name: PORT
+              value: "8083"
