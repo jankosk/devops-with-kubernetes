@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
+  namespace: apps
   name: apps-pv
 spec:
   storageClassName: apps-pv # this is the name you are using later to claim this volume
