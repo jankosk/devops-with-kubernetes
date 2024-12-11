@@ -13,6 +13,8 @@ import (
 )
 
 var logsPath = common.GetEnv("LOGS_PATH", "/tmp")
+var configPath = common.GetEnv("CONFIG_PATH", "/tmp")
+var message = common.GetEnv("MESSAGE", "")
 var pingPongUrl = common.GetEnv("PING_PONG_URL", "http://localhost:3001")
 
 func main() {
@@ -40,7 +42,13 @@ func handleLogRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%s\nPing / Pongs: %d\n", logLine, pingPongCount)
+	configText, err := readConfigFile()
+	if err != nil {
+		http.Error(w, "Unable to read config file", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "file content: %s\nenv variable: %s\n%s\nPing / Pongs: %d\n", configText, message, logLine, pingPongCount)
 }
 
 func fetchPingPongs() (int, error) {
@@ -61,6 +69,11 @@ func fetchPingPongs() (int, error) {
 	}
 
 	return count, nil
+}
+
+func readConfigFile() (string, error) {
+	data, err := os.ReadFile(filepath.Join(configPath, "information.txt"))
+	return string(data), err
 }
 
 func readLastLine(filePath string) (string, error) {

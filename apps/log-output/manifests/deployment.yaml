@@ -17,6 +17,12 @@ spec:
         - name: log-output-vol
           persistentVolumeClaim:
             claimName: apps-pv-claim
+        - name: config-vol
+          configMap:
+            name: config
+            items:
+              - key: "information.txt"
+                path: "information.txt"
       containers:
         - name: log-output-ticker
           image: jankoskin/log-output-ticker@sha256:37e37f5589b1f128dc581cacf961d9e2baec2c94dffedff25cf1a19a12580c33
@@ -27,12 +33,22 @@ spec:
             - name: log-output-vol
               mountPath: /logs
         - name: log-output-handler
-          image: jankoskin/log-output-handler@sha256:3bc13a6c9df63f0f2eb659625d986bcc84eba99f431656ca714325f6d77d196a
+          image: jankoskin/log-output-handler@sha256:9e96b6e771f6b1a4c53b8af879cb8f02fae3b97cc6932e43fd3760dcdd4d0f40
           env:
             - name: LOGS_PATH
               value: /logs
+            - name: CONFIG_PATH
+              value: /config
             - name: PING_PONG_URL
               value: "http://ping-pong-svc:3001/ping-pong"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: config
+                  key: message
           volumeMounts:
             - name: log-output-vol
               mountPath: /logs
+            - name: config-vol
+              mountPath: /config
+              readOnly: true
