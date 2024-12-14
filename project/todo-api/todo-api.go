@@ -12,9 +12,9 @@ import (
 )
 
 type Todo struct {
-	Id    string
-	Title string
-	Done  bool
+	Id    string `json:"id"`
+	Title string `json:"title"`
+	Done  bool   `json:"done"`
 }
 
 var (

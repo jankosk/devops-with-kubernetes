@@ -19,7 +19,7 @@ spec:
             claimName: todo-project-pvc
       containers:
         - name: todo-app
-          image: jankoskin/todo-app@sha256:a41aa62a251a0840b30a21bd2e02dec28d4242c0c31a4aa8b014d6f7e7b10212
+          image: jankoskin/todo-app@sha256:391d79b421ba8eccf929d3caef5afcfea7620f1819f667ba553deb3b73875777
           env:
             - name: PORT
               value: "8080"

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cronjob-script
+  namespace: project
+data:
+  script.sh: |
+    #!/bin/sh
+    set -e
+
+    link=$(curl -s -I -L https://en.wikipedia.org/wiki/Special:Random | grep -i location: | cut -d " " -f 2 | tr -d '\r')
+    api_url="http://todo-api-svc:4001"
+
+    if [ -z $link ]; then
+        echo "Could not find link"
+        exit 1
+    fi
+
+    curl -s -X POST -d "{\"title\": \"$link\", \"done\": false}" "$api_url"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-todos-job
+  namespace: project
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 100
+      template:
+        spec:
+          volumes:
+            - name: script-volume
+              configMap:
+                name: cronjob-script
+                defaultMode: 0700
+          containers:
+            - name: daily-todos-job
+              image: alpine/curl
+              command: ["/bin/sh"]
+              args: ["/scripts/script.sh"]
+              volumeMounts:
+                - name: script-volume
+                  mountPath: /scripts
+          restartPolicy: Never
