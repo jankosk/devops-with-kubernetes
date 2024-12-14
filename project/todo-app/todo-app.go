@@ -35,24 +35,22 @@ func main() {
 	http.HandleFunc("POST /", formPostHandler)
 	http.HandleFunc("GET /random-image", randomImageHandler)
 
-	fmt.Printf("Server listening on port %s\n", port)
+	log.Printf("Server listening on port %s\n", port)
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
-		fmt.Printf("Server failed to start: %v\n", err)
+		log.Fatalf("Server failed to start: %v\n", err)
 	}
 }
 
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 	templ, err := template.ParseFiles("public/index.html")
 	if err != nil {
-		log.Fatal(err)
-		http.Error(w, "Failed parsing index.html", http.StatusInternalServerError)
+		common.HandleErr(w, "Failed parsing index.html", http.StatusInternalServerError, err)
 		return
 	}
 	todos, err := fetchTodos()
 	if err != nil {
-		log.Fatal(err)
-		http.Error(w, "Failed fetching todos", http.StatusInternalServerError)
+		common.HandleErr(w, "Failed fetching todos", http.StatusInternalServerError, err)
 		return
 	}
 
@@ -66,14 +64,14 @@ func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 func formPostHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+		common.HandleErr(w, "Failed to parse form data", http.StatusBadRequest, err)
 		return
 	}
 
 	title := r.PostForm.Get("title")
 	todo := Todo{Title: title, Done: false}
 	if err := createTodo(todo); err != nil {
-		http.Error(w, "Failed to storing todo", http.StatusInternalServerError)
+		common.HandleErr(w, "Failed to create todo", http.StatusInternalServerError, err)
 		return
 	}
 
@@ -83,7 +81,7 @@ func formPostHandler(w http.ResponseWriter, r *http.Request) {
 func randomImageHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := getCachedRandomImage()
 	if err != nil {
-		http.Error(w, "Failed to get image", http.StatusInternalServerError)
+		common.HandleErr(w, "Failed to get image", http.StatusInternalServerError, err)
 		return
 	}
 	w.Header().Set("Content-Type", "image/jpeg")

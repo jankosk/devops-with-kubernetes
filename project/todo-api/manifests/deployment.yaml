@@ -15,7 +15,16 @@ spec:
     spec:
       containers:
         - name: todo-api
-          image: jankoskin/todo-api@sha256:3b67aa01540ed713c73ba9f23a304686c8ae3fb6ced706ae28bd688fd9f6e4c2
+          image: jankoskin/todo-api@sha256:c4487440a8c6792c5e7a76111c1e5c071f54f2ba938aa77c613a2fa2e7438b02
           env:
             - name: PORT
               value: "8083"
+            - name: DB_HOST
+              value: postgres-svc
+            - name: DB_USERNAME
+              value: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-pw
+                  key: DB_PASSWORD

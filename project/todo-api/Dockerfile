@@ -3,7 +3,7 @@ FROM golang:1.23-alpine AS build
 WORKDIR /project/todo-api
 
 COPY common/ /common/
-COPY project/todo-api/go.mod .
+COPY project/todo-api/go.* .
 
 RUN go mod download
 
