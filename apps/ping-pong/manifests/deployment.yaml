@@ -15,4 +15,14 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: jankoskin/ping-pong@sha256:82aaf66e14f71a00dcea07e58c2b3c453be68c27c096724c67b1d51e86ce7867
+          image: jankoskin/ping-pong@sha256:58b155e9bc4f9204dee66a3758b2763d9b2251b1172b776011d7344e1f631e3e
+          env:
+            - name: DB_USERNAME
+              value: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-pw
+                  key: DB_PASSWORD
+            - name: DB_HOST
+              value: postgres-svc

@@ -1,6 +1,9 @@
 package common
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 func GetEnv(key, defaultValue string) string {
 	value := os.Getenv(key)
@@ -10,8 +13,8 @@ func GetEnv(key, defaultValue string) string {
 	return value
 }
 
-func CheckErr(e error) {
+func CheckErr(e error, msg string) {
 	if e != nil {
-		panic(e)
+		log.Fatalf("%s: %v", msg, e)
 	}
 }

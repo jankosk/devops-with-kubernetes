@@ -1,24 +1,54 @@
 package main
 
 import (
+	"database/sql"
+	"dwk/common"
 	"fmt"
+	"log"
 	"net/http"
-	"sync/atomic"
+
+	_ "github.com/lib/pq"
 )
 
+var port = ":3001"
+var (
+	db_host     = common.GetEnv("DB_HOST", "localhost")
+	db_user     = common.GetEnv("DB_USERNAME", "app")
+	db_password = common.GetEnv("DB_PASSWORD", "example")
+)
+var dbUrl = fmt.Sprintf("host=%s user=%s password=%s dbname=postgres sslmode=disable", db_host, db_user, db_password)
+
 func main() {
-	var counter atomic.Uint32
-	port := ":3001"
+	db, err := sql.Open("postgres", dbUrl)
+	common.CheckErr(err, "Failed to connect to the database")
+	defer db.Close()
 
-	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		counter.Add(1)
+	err = initDb(db)
+	common.CheckErr(err, "Failed initialize database")
 
-		fmt.Fprintf(writer, "%d\n", counter.Load())
+	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		count, err := updatePingCount(db)
+		if err != nil {
+			http.Error(w, "Failed to update pings", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "%d\n", count)
 	})
 
-	fmt.Printf("Server listening on port %s\n", port)
-	err := http.ListenAndServe(port, nil)
+	log.Printf("Server listening on port %s\n", port)
+	err = http.ListenAndServe(port, nil)
 	if err != nil {
-		fmt.Printf("Server failed to start: %v\n", err)
+		log.Fatalf("Server failed to start: %v\n", err)
 	}
+}
+
+func initDb(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS pings (pinged_at TIMESTAMPTZ NOT NULL)`)
+	return err
+}
+
+func updatePingCount(db *sql.DB) (int, error) {
+	var count int
+	err := db.QueryRow(`INSERT INTO pings (pinged_at) VALUES (now()) RETURNING (SELECT COUNT(*) + 1 FROM pings)`).Scan(&count)
+	return count, err
 }

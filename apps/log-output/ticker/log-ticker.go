@@ -19,7 +19,7 @@ func main() {
 	id := uuid.NewString()
 	logFilePath := common.GetEnv("LOGS_PATH", "/tmp")
 	f, err := os.Create(filepath.Join(logFilePath, "logs.txt"))
-	common.CheckErr(err)
+	common.CheckErr(err, "Failed to create log file")
 
 	go startLoggingTicker(f, id, time.Second*5)
 
