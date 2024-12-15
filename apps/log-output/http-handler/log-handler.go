@@ -5,6 +5,7 @@ import (
 	"dwk/common"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,29 +23,29 @@ func main() {
 
 	http.HandleFunc("/", handleLogRequest)
 
-	fmt.Printf("Server listening on port %s\n", port)
+	log.Printf("Server listening on port %s\n", port)
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
-		fmt.Printf("Server failed to start: %v\n", err)
+		log.Fatalf("Server failed to start: %v\n", err)
 	}
 }
 
 func handleLogRequest(w http.ResponseWriter, r *http.Request) {
 	logLine, err := readLastLine(filepath.Join(logsPath, "logs.txt"))
 	if err != nil {
-		http.Error(w, "Unable to read log file", http.StatusInternalServerError)
+		common.HandleErr(w, "Unable to read log file", http.StatusInternalServerError, err)
 		return
 	}
 
 	pingPongCount, err := fetchPingPongs()
 	if err != nil {
-		http.Error(w, "Unable to fetch ping pongs", http.StatusInternalServerError)
+		common.HandleErr(w, "Unable to fetch ping pongs", http.StatusInternalServerError, err)
 		return
 	}
 
 	configText, err := readConfigFile()
 	if err != nil {
-		http.Error(w, "Unable to read config file", http.StatusInternalServerError)
+		common.HandleErr(w, "Unable to read config file", http.StatusInternalServerError, err)
 		return
 	}
 

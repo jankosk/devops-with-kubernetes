@@ -5,6 +5,8 @@ metadata:
   namespace: apps
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: log-output
@@ -25,7 +27,7 @@ spec:
                 path: "information.txt"
       containers:
         - name: log-output-ticker
-          image: jankoskin/log-output-ticker@sha256:37e37f5589b1f128dc581cacf961d9e2baec2c94dffedff25cf1a19a12580c33
+          image: jankoskin/log-output-ticker@sha256:f2d7e4875a516551f59ee4e5ada7c496e3b809c7d3e5c8e756a69871e86f476e
           env:
             - name: LOGS_PATH
               value: /logs
@@ -33,14 +35,14 @@ spec:
             - name: log-output-vol
               mountPath: /logs
         - name: log-output-handler
-          image: jankoskin/log-output-handler@sha256:9e96b6e771f6b1a4c53b8af879cb8f02fae3b97cc6932e43fd3760dcdd4d0f40
+          image: jankoskin/log-output-handler@sha256:61360ff08d46eb3155ba4cd448d7f1fb8949b7fd921f63812766aa1cb6ab54eb
           env:
             - name: LOGS_PATH
               value: /logs
             - name: CONFIG_PATH
               value: /config
             - name: PING_PONG_URL
-              value: "http://ping-pong-svc:3001/ping-pong"
+              value: "http://ping-pong-svc/ping-pong"
             - name: MESSAGE
               valueFrom:
                 configMapKeyRef:

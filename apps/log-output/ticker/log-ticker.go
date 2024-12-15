@@ -33,6 +33,9 @@ func startLoggingTicker(f *os.File, id string, interval time.Duration) {
 	log.Printf("Ticker with %vs interval started\n", interval.Seconds())
 	for t := range ticker.C {
 		newTimestamp := t.Format(time.RFC3339)
-		f.WriteString(fmt.Sprintf("%s: %s\n", newTimestamp, id))
+		_, err := f.WriteString(fmt.Sprintf("%s: %s\n", newTimestamp, id))
+		if err != nil {
+			log.Printf("Failed to writing to log file: %v", err)
+		}
 	}
 }

@@ -2,11 +2,10 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: apps
-  name: apps-pv-claim # name of the volume claim, this will be used in the deployment
+  name: apps-pv-claim
 spec:
-  storageClassName: apps-pv # this is the name of the persistent volume we are claiming
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 100Mi
