@@ -29,7 +29,7 @@ func main() {
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		count, err := updatePingCount(db)
 		if err != nil {
-			http.Error(w, "Failed to update pings", http.StatusInternalServerError)
+			common.HandleErr(w, "Failed to update pings", http.StatusInternalServerError, err)
 			return
 		}
 		fmt.Fprintf(w, "%d\n", count)

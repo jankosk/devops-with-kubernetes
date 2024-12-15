@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: jankoskin/ping-pong@sha256:58b155e9bc4f9204dee66a3758b2763d9b2251b1172b776011d7344e1f631e3e
+          image: jankoskin/ping-pong@sha256:612bec15a70367224c3f728b610a9354bb10475448e037e7c21268cb65488217
           env:
             - name: DB_USERNAME
               value: postgres
