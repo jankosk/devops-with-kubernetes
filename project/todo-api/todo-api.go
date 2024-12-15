@@ -61,11 +61,16 @@ func createTodoHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) 
 			common.HandleErr(w, "Invalid JSON payload", http.StatusBadRequest, err)
 			return
 		}
-		todo, err := createTodo(db, todo)
-		if err != nil {
-			common.HandleErr(w, "Failed to create todo", http.StatusBadRequest, err)
+		if len(todo.Title) > 140 {
+			common.HandleErr(w, "Todo title limit is 140 characters", http.StatusBadRequest, nil)
 			return
 		}
+		todo, err := createTodo(db, todo)
+		if err != nil {
+			common.HandleErr(w, "Failed to create todo", http.StatusInternalServerError, err)
+			return
+		}
+		log.Printf("Created todo %v", todo)
 		respondWithJSON(w, http.StatusCreated, todo)
 	}
 }
