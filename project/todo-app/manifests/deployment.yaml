@@ -5,6 +5,8 @@ metadata:
   namespace: project
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: todo-app
@@ -19,12 +21,12 @@ spec:
             claimName: todo-project-pvc
       containers:
         - name: todo-app
-          image: jankoskin/todo-app@sha256:391d79b421ba8eccf929d3caef5afcfea7620f1819f667ba553deb3b73875777
+          image: PROJECT/APP_IMAGE
           env:
             - name: PORT
               value: "8080"
             - name: TODO_API_URL
-              value: "http://todo-api-svc:4001/todos"
+              value: "http://todo-api-svc/todos"
             - name: FILES_PATH
               value: /static
           volumeMounts:

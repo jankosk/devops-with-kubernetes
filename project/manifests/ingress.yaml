@@ -13,11 +13,11 @@ spec:
               service:
                 name: todo-app-svc
                 port:
-                  number: 4000
+                  number: 80
           - path: /todos
             pathType: Prefix
             backend:
               service:
                 name: todo-api-svc
                 port:
-                  number: 4001
+                  number: 80

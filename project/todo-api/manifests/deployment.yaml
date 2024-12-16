@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: todo-api
-          image: jankoskin/todo-api@sha256:8bde1bda64f66d23b2a39734c3ce36c7ef6e1ebb6212a518330a8fea1116642f
+          image: PROJECT/API_IMAGE
           env:
             - name: PORT
               value: "8083"

@@ -9,7 +9,7 @@ data:
     set -e
 
     link=$(curl -s -I -L https://en.wikipedia.org/wiki/Special:Random | grep -i location: | cut -d " " -f 2 | tr -d '\r')
-    api_url="http://todo-api-svc:4001"
+    api_url="http://todo-api-svc"
 
     if [ -z $link ]; then
         echo "Could not find link"

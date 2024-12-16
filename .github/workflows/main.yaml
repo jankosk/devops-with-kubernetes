@@ -1,0 +1,75 @@
+name: Release application
+
+on:
+  push:
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: dwk-cluster
+  GKE_ZONE: europe-north1-b
+  APP_IMAGE: todo-app
+  API_IMAGE: todo-api
+  BRANCH: ${{ github.ref_name }}
+  SOPS_AGE_KEY: ${{ secrets.AGE_KEY }}
+
+jobs:
+  build-publish-deploy:
+    name: Build, Publish and Deploy
+    runs-on: ubuntu-latest
+    environment: dwk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GKE_SA_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: "Use gcloud CLI"
+        run: gcloud info
+
+      - run: gcloud --quiet auth configure-docker
+
+      - name: "Get GKE credentials"
+        uses: "google-github-actions/get-gke-credentials@v2"
+        with:
+          cluster_name: "${{ env.GKE_CLUSTER }}"
+          project_id: "${{ env.PROJECT_ID }}"
+          location: "${{ env.GKE_ZONE }}"
+
+      - name: Build
+        run: |-
+          docker build -f ./project/todo-app/Dockerfile -t "gcr.io/$PROJECT_ID/$APP_IMAGE:$BRANCH-$GITHUB_SHA" .
+          docker build -f ./project/todo-api/Dockerfile -t "gcr.io/$PROJECT_ID/$API_IMAGE:$BRANCH-$GITHUB_SHA" .
+
+      - name: Publish
+        run: |-
+          docker push "gcr.io/$PROJECT_ID/$APP_IMAGE:$BRANCH-$GITHUB_SHA"
+          docker push "gcr.io/$PROJECT_ID/$API_IMAGE:$BRANCH-$GITHUB_SHA"
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2.1.0
+
+      - name: Set up sops
+        run: |-
+          curl -L -o sops.deb https://github.com/getsops/sops/releases/download/v3.9.2/sops_3.9.2_amd64.deb
+          sudo apt install -y ./sops.deb
+
+      - name: Prepare secrets
+        run: |-
+          sops --decrypt ./project/todo-api/manifests/secret.enc.yaml > ./project/todo-api/manifests/secret.yaml
+
+      - name: Deploy
+        run: |-
+          pushd ./project
+          kustomize edit set image PROJECT/APP_IMAGE=gcr.io/$PROJECT_ID/$APP_IMAGE:$BRANCH-$GITHUB_SHA
+          kustomize edit set image PROJECT/API_IMAGE=gcr.io/$PROJECT_ID/$API_IMAGE:$BRANCH-$GITHUB_SHA
+          kustomize build . | kubectl apply -f -
+          kubectl -n project rollout status deployment $APP_IMAGE
+          kubectl -n project rollout status deployment $API_IMAGE
+          kubectl -n project get services -o wide
+          popd
