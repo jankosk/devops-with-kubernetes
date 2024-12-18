@@ -10,6 +10,7 @@ env:
   APP_IMAGE: todo-app
   API_IMAGE: todo-api
   BRANCH: ${{ github.ref_name }}
+  NAMESPACE: project
   SOPS_AGE_KEY: ${{ secrets.AGE_KEY }}
 
 jobs:
@@ -63,13 +64,20 @@ jobs:
         run: |-
           sops --decrypt ./project/todo-api/manifests/secret.enc.yaml > ./project/todo-api/manifests/secret.yaml
 
+      - name: Set namespace
+        if: ${{ env.BRANCH != 'main' }}
+        run: echo "NAMESPACE=project-$BRANCH" >> $GITHUB_ENV
+
       - name: Deploy
         run: |-
           pushd ./project
+          kubectl create namespace $NAMESPACE || true
+          kubectl config set-context --current --namespace=$NAMESPACE
           kustomize edit set image PROJECT/APP_IMAGE=gcr.io/$PROJECT_ID/$APP_IMAGE:$BRANCH-$GITHUB_SHA
           kustomize edit set image PROJECT/API_IMAGE=gcr.io/$PROJECT_ID/$API_IMAGE:$BRANCH-$GITHUB_SHA
+          kustomize edit set namespace $NAMESPACE
           kustomize build . | kubectl apply -f -
-          kubectl -n project rollout status deployment $APP_IMAGE
-          kubectl -n project rollout status deployment $API_IMAGE
-          kubectl -n project get services -o wide
+          kubectl rollout status deployment $APP_IMAGE
+          kubectl rollout status deployment $API_IMAGE
+          kubectl get services -o wide
           popd
